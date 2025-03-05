@@ -7,3 +7,4 @@ vector_db_option = st.sidebar.selectbox("Select Vector Database", ["FAISS", "Chr
 
 # Chat interface
 st.title("AI Chatbot with RAG")
+st.chat_input("ask a question")
