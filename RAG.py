@@ -26,7 +26,8 @@ else:
 
 # Load ChromaDB Vector Store
 persist_directory = os.path.join(os.path.dirname(__file__), "chroma_db")
-vectorstore = Chroma(persist_directory=persist_directory)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+vectorstore = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # Initialize LLM
