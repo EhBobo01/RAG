@@ -32,11 +32,12 @@ retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
-
+ 
 # Custom Prompt Template
 prompt_template = """
 You are an AI assistant answering questions based on a PDF document.
 Use only the provided context to generate answers. If uncertain, state so.
+Make sure the answers generated are in a user-friendly, readable, grammar way.
 
 Context: {context}
 
