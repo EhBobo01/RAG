@@ -25,7 +25,7 @@ else:
     st.sidebar.warning("Please enter your API key to proceed.")
 
 # Load ChromaDB Vector Store
-persist_directory = "./chroma_db"
+persist_directory = os.path.join(os.path.dirname(__file__), "chroma_db")
 vectorstore = Chroma(persist_directory=persist_directory)
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
