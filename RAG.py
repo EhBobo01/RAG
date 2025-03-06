@@ -32,7 +32,7 @@ if gen_model:
     
 # Vector store 
  
-vectorstore = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
+vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
 
 
 
