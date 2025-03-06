@@ -9,44 +9,36 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from tqdm import tqdm
 
-def main():
-    st.title("📄 AI Chatbot for PDFs")
-    
-    # Input API Key
-    api_key = st.text_input("Enter your Google API Key:", type="password")
-    if api_key:
-        os.environ["GOOGLE_API_KEY"] = api_key
-    else:
-        st.warning("Please enter a valid API key to proceed.")
-        return
-    
-    # Model Selection
-    model_option = st.selectbox("Select a model:", ["gemini-1.5-flash", "gemini-1.5-pro"])
-    
-    # Upload PDF
-    uploaded_file = st.file_uploader("Upload a PDF file:", type=["pdf"])
-    if uploaded_file is None:
-        st.info("Please upload a PDF to proceed.")
-        return
-    
-    # Load PDF and Split Text
+# Load environment variables
+load_dotenv()
+
+# Sidebar Inputs
+st.sidebar.title("Settings")
+api_key = st.sidebar.text_input("Enter Google API Key", type="password")
+os.environ["GOOGLE_API_KEY"] = api_key
+
+uploaded_file = st.sidebar.file_uploader("Upload a PDF", type=["pdf"])
+model_choice = st.sidebar.selectbox("Select LLM Model", ["gemini-1.5-flash", "gemini-1.5-pro"])
+
+if uploaded_file and api_key:
+    # Process PDF
     with st.spinner("Processing PDF..."):
         loader = PyPDFLoader(uploaded_file)
         documents = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, chunk_overlap=200, length_function=len
+        )
         splits = text_splitter.split_documents(documents)
-    
-    # Generate Embeddings
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    persist_directory = "./chroma_db"
-    vectorstore = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
-    
-    # Store Document Chunks
-    for chunk in tqdm(splits, desc="Processing chunks"):
-        vectorstore.add_documents([chunk], embedding=embeddings)
-    
-    # Set up LLM and QA Chain
-    llm = ChatGoogleGenerativeAI(model=model_option)
+
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        persist_directory = "./chroma_db"
+        vectorstore = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
+        for chunk in tqdm(splits, desc="Processing chunks"):
+            vectorstore.add_documents([chunk], embedding=embeddings)
+
+    # Setup LLM & QA Chain
+    llm = ChatGoogleGenerativeAI(model=model_choice)
     prompt_template = """
         You are a helpful AI assistant that answers questions based on the provided PDF document.
         Use only the context provided to answer the question. If you don't know the answer or
@@ -67,17 +59,27 @@ def main():
         return_source_documents=True,
         chain_type_kwargs={"prompt": PROMPT}
     )
-    
-    # Chat Interface
-    query = st.text_input("Ask a question about the document:")
-    if st.button("Submit") and query:
-        with st.spinner("Fetching answer..."):
-            result = qa_chain.run(query)
-            st.write("\n💡 **Answer:**\n", result["result"])
-            
-            st.write("\n📚 **Source Documents:**")
-            for doc in result["source_documents"]:
-                st.write(f"🔹 {doc.metadata['source']} -> {doc.page_content[:200]}...")
 
-if __name__ == "__main__":
-    main()
+    # Main Chat Interface
+    st.title("📄 PDF Chatbot")
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    user_input = st.chat_input("Ask a question about the document...")
+    if user_input:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        
+        with st.spinner("Generating response..."):
+            response = qa_chain(user_input)
+            answer = response["result"]
+        
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+        with st.chat_message("assistant"):
+            st.markdown(answer)

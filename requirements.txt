@@ -1,0 +1,7 @@
+streamlit
+python-dotenv
+tqdm
+langchain
+langchain-community
+langchain-google-genai
+langchain-chroma
