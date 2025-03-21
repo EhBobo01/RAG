@@ -16,7 +16,6 @@ st.title("📖 RAG-Powered Chatbot")
 # Settings Sidebar
 st.sidebar.header("⚙️ Settings")
 api_key = st.sidebar.text_input("Enter Google API Key", type="password")
-#api_key = "AIzaSyDEUAl1yUDjQ_f0k6CzFycSe_jd55R-bdk"
 
 if api_key:
     os.environ["GOOGLE_API_KEY"] = api_key
