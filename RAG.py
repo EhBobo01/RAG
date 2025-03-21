@@ -24,7 +24,6 @@ if api_key:
 else:
     st.sidebar.warning("Please enter your API key to proceed.")
 
-# Load ChromaDB Vector Store
 persist_directory = os.path.join(os.path.dirname(__file__), "chroma_db")
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 vectorstore = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
